@@ -1,0 +1,11 @@
+#!/usr/bin/octave
+
+arg_list = argv ();
+filename = arg_list{1};
+
+
+ filename=strcat("./surfaces/",filename,"/U_Plane.raw");
+
+ b=load(filename);
+
+ csvwrite("U.csv",b);
