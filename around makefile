@@ -1,0 +1,158 @@
+!include <win32.mak>
+# Uncomment the following for DEBUG build, comment out for RELEASE build
+#DEBUG_BUILD   = 1
+# Uncomment this line for INTEL Fortran, comment out for COMPAQ or DIGITAL Fortran
+INTEL_FORTRAN = 1
+# Uncomment this line for VC9 compatibility
+USING_VC9 = 1
+!ifndef USING_VC9
+# Uncomment this line for VC8 compatibility
+#USING_VC8 = 1
+!ifndef USING_VC8
+# Uncomment this line for VC6 compatiblity
+#USING_VC6     = 1
+!endif
+!endif
+########################## Generic part of makefile #####################
+#!include <win32.mak>
+########################## Path to required atutcfor.h/c files etc
+INCL            = -I
+INCLUDEPATHS    = $(INCL)$(ATUTCFORINCLUDEPATH) 
+########################## File Extensions #########
+OBJ             = .obj
+OLB             = .lib
+DLL             = .dll
+CPPSUFFIX       = .cpp
+WIPEALL         = .*
+########################## Basic command macros ####
+ECHO            = @echo
+WIPE            = @del
+RSC             = @rc.exe
+#
+########################## Compiler Commands #######
+C               = @cl /nologo
+CPP             = @cl /nologo
+C_ALTOBJECT     = /Fo
+!ifdef INTEL_FORTRAN
+FORTRAN         = @ifort /nologo /iface:cvf
+!else
+FORTRAN         = @fl32 /nologo
+!endif
+#
+########################## Compiler Options ########
+C_OPTIMIZE      = /O1
+C_OPTC          = /c /W3 /D_X86_=1 /DWIN32 /DINTEL_X86 /D_NO_PROTO /D_CRT_SECURE_NO_WARNINGS /MD /Zm500 /EHsc 
+CPP_OPTC        = $(C_OPTC) /Zc:wchar_t- 
+F_OPTC          = /c /DWIN32 /DINTEL_X86 /G5 /MD 
+RSC_OPT         = /l 0x809 
+!ifdef DEBUG_BUILD
+# remove /DPROCEDURE_CALL_DEBUG to disable all embedded debug diagnostics
+# and/or edit individual source files
+CDEBUG          = /Zi /D_DEBUG /DPROCEDURE_CALL_DEBUG
+CPPDEBUG        = $(CDEBUG)
+# remove /d_lines to disable all embedded debug diagnostics
+FDEBUG          = /Zi /d_lines
+RSCDEBUG        = /d "_DEBUG"
+!else
+CDEBUG          = 
+CPPDEBUG        =
+FDEBUG          =
+RSCDEBUG        = /d "NDEBUG"
+!endif
+# Manifest Tool (needed with C/C++ 2005 aka VC8)
+MT				= @mt -nologo
+#
+########################## Link Commands ###########
+!ifdef DEBUG_BUILD
+LINKDEBUG       = /DEBUG /MAP /DEBUGTYPE:CV /IGNORE:4006
+!else
+LINKDEBUG       = /IGNORE:4006
+!endif
+C_LINK          = @link 
+DLLOPT          = /dll /OPT:NOREF
+LIB_PATH        = /LIBPATH:
+C_OPTL          = /NOLOGO /SUBSYSTEM:CONSOLE /FORCE:MULTIPLE /MACHINE:IX86 \
+                  /NODEFAULTLIB:"libc.lib" \
+                  /NODEFAULTLIB:"msvcrt.lib" /NODEFAULTLIB:"msvcrtd.lib" \
+                  /NODEFAULTLIB:"msvcirt.lib" /NODEFAULTLIB:"msvcirtd.lib"
+#
+ALT_EXECUTABLE  = /OUT:
+#
+!ifdef DEBUG_BUILD
+# Debug build system libraries
+CSYSLIBS        = user32.lib gdi32.lib winspool.lib \
+                  comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+                  uuid.lib odbc32.lib odbccp32.lib wsock32.lib msvcrtd.lib 
+SYSLIBS         = user32.lib gdi32.lib winspool.lib \
+                  comdlg32.lib advapi32.lib shell32.lib \
+                  wsock32.lib msvcrtd.lib 
+!else
+# Release build system libraries
+CSYSLIBS        = user32.lib gdi32.lib winspool.lib \
+                  comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+                  uuid.lib odbc32.lib odbccp32.lib wsock32.lib msvcrt.lib 
+SYSLIBS         = user32.lib gdi32.lib winspool.lib \
+                  comdlg32.lib advapi32.lib shell32.lib \
+                  wsock32.lib msvcrt.lib 
+!endif
+#
+#
+##################### End of generic part of makefile ###################
+#
+ATUTCFORPATH        = C:\Program Files (x86)\AspenTech\AMSystem V7.3\procedures
+ATUTCFORINCLUDEPATH = "C:\Program Files (x86)\AspenTech\AMSystem V7.3\procedures"
+AMSYSBIN            = C:\Program Files (x86)\AspenTech\AMSystem V7.3\Bin
+#
+# no user include file supplied
+#
+#
+################### Problem specific part ###############################
+Libraries    = simple$(DLL)
+USERLIBS = ssh$(OLB)
+USERLIBPATHS = $(LIB_PATH)"C:\Users\mike\Desktop\0\acmtest\simplecal\lib"
+#
+Library1_Objects = simple$(OBJ)
+#
+!ifdef USING_VC6
+LIBATDLL = libatdllvc6
+!else
+!ifdef OTHER_COMPILER
+LIBATDLL = atdll_support
+!else
+LIBATDLL = libatdll
+!endif
+!endif
+#
+# Sets the image version number in the dll
+VERSION = /VERSION:25.0
+#
+#
+build: $(Libraries)
+#
+simple$(DLL): $(Library1_Objects) "simple.res" $(USERTARGETS)
+	$(ECHO) Building Dynamic Link Library simple$(DLL)
+	$(C_LINK) $(LINKDEBUG) $(C_OPTL) $(DLLOPT) $(VERSION) "simple.res" $(Library1_Objects) \
+	"$(ATUTCFORPATH)\$(LIBATDLL)$(OLB)"  "$(AMSYSBIN)\gpp$(OLB)" \
+	$(ALT_EXECUTABLE)"simple$(DLL)" $(USERLIBPATHS) $(USERLIBS) \
+    $(SYSLIBS)
+!ifdef USING_VC9
+    $(MT) -manifest "simple$(DLL).manifest" -outputresource:"simple$(DLL)";2
+!endif
+	$(ECHO) Dynamic Link Library built
+#
+!ifdef USING_VC8
+    $(MT) -manifest "simple$(DLL).manifest" -outputresource:"simple$(DLL)";2
+!endif
+	$(ECHO) Dynamic Link Library built
+#
+#
+# Version resource for simple
+"simple.res": "simple.rc"
+    $(ECHO) Compiling simple.rc
+    $(RSC) $(RSC_OPT) -fo "simple.res" "simple.rc"
+#
+simple$(OBJ): simple.c "$(ATUTCFORPATH)\atutcfor.h"
+	$(ECHO) Compiling simple.c
+	$(C) $(CDEBUG) $(C_OPTC) $(INCLUDEPATHS) $(USERINCLUDEPATHS) simple.c $(C_ALTOBJECT)simple$(OBJ)
+#
+#
