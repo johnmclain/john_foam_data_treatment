@@ -1,0 +1,11 @@
+Procedure around
+   Library:        "around"; 
+   Call:           around; 
+   Compatibility:  "ACM2004"; 
+   Implementation: Subroutine "around.cpp";
+   Language:       "C++";
+// Options:        <options list>;
+// Workspace:      <workspace size>;
+   Inputs:         integerparameter,integerparameter;
+   Outputs:        realvariable(*,*);
+End
