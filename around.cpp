@@ -170,7 +170,7 @@ DLL_C_AS_F(void) AROUND_C(
   int port = 22;
   int rc;
   
-  const char password[] ="ly5611899";
+  const char password[] ="**********";
   const char username[] ="ubuntu";
   const char filename[] ="/home/ubuntu/OpenFOAM/OpenFOAM-v1606+/tutorials/multiphase/multiphaseEulerFoam/bubbleColumn/postProcessing/surfaces/99/alpha.air_Plane.raw";
 
